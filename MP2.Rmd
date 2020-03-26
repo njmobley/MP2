@@ -1,0 +1,28 @@
+---
+title: "Mini Project 2"
+author: "Evelyn Delph"
+date: "3/26/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# library imports go here
+library(tidyverse)
+
+# read in data
+df <- read.csv("DFP_WTHH_release.csv")
+
+# separate data in based on voting pattern
+switchD <- filter(filter(df,presvote16post != 1),house3 == 1)
+switchR <- filter(filter(df,presvote16post != 2),house3 == 2)
+swinger <- (df$presvote16post != 1 & df$house3 == 1) | (df$presvote16post != 2 & df$house3 == 2)
+swingers <-  df[switcher != FALSE,]
+```
+
+
+#Section 1: How do Switch D and Switch R voters differ on issue variables?
+
+#Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on issue variables?
+
+#Section 3: What predicts being a swing voter?
