@@ -9,6 +9,10 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 # library imports go here
 library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(broom)
 
 # read in data
 df <- read.csv("DFP_WTHH_release.csv")
@@ -17,12 +21,228 @@ df <- read.csv("DFP_WTHH_release.csv")
 switchD <- filter(filter(df,presvote16post != 1),house3 == 1)
 switchR <- filter(filter(df,presvote16post != 2),house3 == 2)
 swinger <- (df$presvote16post != 1 & df$house3 == 1) | (df$presvote16post != 2 & df$house3 == 2)
-swingers <-  df[switcher != FALSE,]
+swingers <-  df[swinger != FALSE,]
+df['Swinger'] <- swinger
 ```
-
 
 #Section 1: How do Switch D and Switch R voters differ on issue variables?
 
 #Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on issue variables?
 
 #Section 3: What predicts being a swing voter?
+
+##Issue Variables
+```{r,echo=F}
+# subset data
+issues <- df[c("Swinger","M4A","GREENJOB","WEALTH","MARLEG","ICE","GUNS")]
+
+# adding variables to model at a time
+one.issue <- glm(Swinger ~ WEALTH, family = quasibinomial, weights = weight_DFP, data = df)
+two.issues <- glm(Swinger ~ WEALTH * M4A, family = quasibinomial, weights = weight_DFP, data = df)
+three.issues <- glm(Swinger ~ WEALTH * M4A + MARLEG, family = quasibinomial, weights = weight_DFP, data = df)
+four.issues <-  glm(Swinger ~ WEALTH * M4A + MARLEG + GUNS, family = quasibinomial, weights = weight_DFP, data = df)
+five.issues <-  glm(Swinger ~ WEALTH * M4A + MARLEG + GUNS + GREENJOB, family = quasibinomial, weights = weight_DFP, data = df)
+six.issues <- glm(Swinger ~ WEALTH * M4A + MARLEG + GUNS + GREENJOB + ICE, family = quasibinomial, weights = weight_DFP, data = df)
+
+# probs for one issues
+coe <- coef(one.issue)
+y <- coe[1] + coe[2] * 1:5
+probs <- exp(y) / (1 + exp(y)) 
+cat("Probabilities for one issue variable (Wealth):\n",probs)
+print("")
+
+# probs for two issues
+coe <- coef(two.issues)
+y <- coe[1] + coe[2] + coe[3] * coe[4] * 1:5
+probs <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for two issue variables (WEALTH + M4A):\n",probs)
+print("")
+
+coe <- coef(three.issues)
+y <- coe[1] + coe[2] + coe[3] + coe[4] * coe[5] * 1:5
+probs <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for three issue variables (WEALTH + M4A + MARLEG):\n",probs)
+print("")
+
+coe <- coef(four.issues)
+y <- coe[1] + coe[2] + coe[3] + coe[4] + coe[5] * coe[6] * 1:5
+probs <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for four issue variables (WEALTH + M4A + MARLEG + GUNS):\n",probs)
+print("")
+
+coe <- coef(five.issues)
+y <- coe[1] + coe[2] + coe[3] + coe[4] + coe[5] + coe[6] * coe[7] * 1:5
+probs <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for five issue variables (WEALTH + M4A + MARLEG + GUNS+ GREENJOB):\n",probs)
+print("")
+
+coe <- coef(six.issues)
+y <- coe[1] + coe[2] + coe[3] + coe[4] + coe[5] + coe[6] + coe[7] * coe[8] * 1:5
+probs <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for six issue variables (WEALTH + M4A + MARLEG + GUNS+GREENJOB + ICE):\n",probs)
+```
+
+Final 6 variable equation:
+```
+votes = -1.99244285 + 0.29325492 + 0.18323905 + (-0.18073493) + 0.11441703  + 0.16567127 + (-0.07662718) * (-0.10216151 ) * X
+```
+
+##Populism Variables
+```{r,echo=F}
+pop <- df[c("POP_1","POP_2","POP_3")]
+
+# populism variable models
+one.pop <- glm(Swinger ~ POP_1, family = quasibinomial, weights = weight_DFP, data = df)
+two.pops <- glm(Swinger ~ POP_1 + POP_2, family = quasibinomial, weights = weight_DFP, data = df)
+three.pops <- glm(Swinger ~ POP_1 + POP_2 + POP_3, family = quasibinomial, weights = weight_DFP, data = df)
+
+# probs for one pop variable
+coe <- coef(one.pop)
+y <- coe[1] + coe[2] * 1:5
+probs <- exp(y) / (1 + exp(y)) 
+cat("Probabilities for one populism variable (POP_1):\n",probs)
+print("")
+
+# probs for two pop variables
+coe <- coef(two.pops)
+y <- coe[1] + coe[2] + coe[3] * 1:5
+probs <- exp(y) / (1 + exp(y)) 
+cat("Probabilities for two populism variables (POP_1+ POP_2):\n",probs)
+print("")
+
+# probs for three pop variables
+coe <- coef(three.pops)
+y <- coe[1] + coe[2] + coe[3] + coe[4] * 1:5
+probs <- exp(y) / (1 + exp(y)) 
+cat("Probabilities for three populism variables (POP_1 + POP_2 + POP_3):\n",probs)
+print("")
+```
+Final 3 populism variable equation:
+```
+votes = -1.06513692 + (-0.20446605) + (-0.04608700) + 0.06178131 * X
+```
+#Appendix
+
+##Section 3
+
+GGPairs plot to detect correlation and possible interactions with issue variables:
+```{r,echo=F}
+ggpairs(issues)
+```
+
+Results of fitting the issue variable models:
+```{r,echo=F}
+# evaluate residuals
+six.df <- augment(six.issues)
+
+# evaluate final model
+six.df$.fitted = fitted.values(six.issues)
+six.df$.resid = residuals(six.issues, type="response") 
+
+gg1 <- ggplot(six.df, aes(x = .fitted, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("Fitted values") + 
+  ylab("Residuals") + 
+  ggtitle("Fitted Values over Residuals")
+
+gg2 <- ggplot(six.df, aes(x = WEALTH, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("Wealth") + 
+  ylab("Residuals") + 
+  ggtitle("Wealth Responses over Residuals")
+
+gg3 <- ggplot(six.df, aes(x = M4A, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("M4A") + 
+  ylab("Residuals") + 
+  ggtitle("Medicare for All Responses over Residuals")
+
+gg4 <- ggplot(six.df, aes(x = GUNS, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("Guns") + 
+  ylab("Residuals") + 
+  ggtitle("Gun Responses over Residuals")
+
+gg5 <- ggplot(six.df, aes(x = ICE, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("ICE") + 
+  ylab("Residuals") + 
+  ggtitle("ICE Responses over Residuals")
+
+gg6 <- ggplot(six.df, aes(x = GREENJOB, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("GREENJOB") + 
+  ylab("Residuals") + 
+  ggtitle("Green-job Responses over Residuals")
+  
+
+gg7 <- ggplot(six.df, aes(x = MARLEG, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("MARLEG") + 
+  ylab("Residuals") +
+  ggtitle("Legalizing Marijuana Responses over Residuals")
+
+gg1
+gg2
+gg3
+gg4
+gg5
+gg6
+gg7
+```
+
+GGPairs for populism variables:
+```{r,echo=F}
+ggpairs(pop)
+```
+
+Results from fitting populism variables:
+```{r,echo=F}
+# evaluate residuals
+pop.df <- augment(three.pops)
+
+# evaluate final model
+pop.df$.fitted = fitted.values(three.pops)
+pop.df$.resid = residuals(three.pops, type="response") 
+
+gg1 <- ggplot(pop.df, aes(x = .fitted, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("Fitted values") + 
+  ylab("Residuals") + 
+  ggtitle("Fitted Values over Residuals")
+
+gg2 <- ggplot(pop.df, aes(x = POP_1, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("POP_1") + 
+  ylab("Residuals") + 
+  ggtitle("POP 1 Variable over Residuals")
+
+gg3 <- ggplot(pop.df, aes(x = POP_2, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("POP_2") + 
+  ylab("Residuals") + 
+  ggtitle("POP 2 Variable over Residuals")
+
+gg4 <- ggplot(pop.df, aes(x = POP_3, y = .resid)) + 
+  geom_point() + 
+  geom_smooth(method = "loess", method.args = list(degree = 1)) + 
+  xlab("POP_3") + 
+  ylab("Residuals") + 
+  ggtitle("POP 3 Variable over Residuals")
+
+
+gg1
+gg2
+gg3
+gg4
+```
