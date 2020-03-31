@@ -21,6 +21,8 @@ df <- read.csv("DFP_WTHH_release.csv")
 loyalD <- filter(filter(df, presvote16post == 1), house3 == 1)
 loyalR <- filter(filter(df, presvote16post == 2), house3 == 2)
 
+loyal <- rbind(loyalD, loyalR)
+
 switchD <- filter(filter(df,presvote16post != 1),house3 == 1)
 switchR <- filter(filter(df,presvote16post != 2),house3 == 2)
 
@@ -35,6 +37,20 @@ issues <- df[c("Swinger","M4A","GREENJOB","WEALTH","MARLEG","ICE","GUNS")]
 #Section 1: How do Switch D and Switch R voters differ on issue variables?
 
 #Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on issue variables?
+
+```{r, warning = FALSE}
+ggplot(df, aes(y = M4A, x = Swinger, color = Swinger)) + geom_boxplot() + scale_x_discrete(limits = c("TRUE", "FALSE")) + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Medicare For ALL")
+
+ggplot(df, aes(y = GREENJOB, x = Swinger, color = Swinger)) + geom_boxplot() + scale_x_discrete(limits = c("TRUE", "FALSE")) + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("A Green Jobs Program")
+
+ggplot(df, aes(y = WEALTH, x = Swinger, color = Swinger)) + geom_boxplot() + scale_x_discrete(limits = c("TRUE", "FALSE")) + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("A tax on wealth over $100 million")
+
+ggplot(df, aes(y = MARLEG, x = Swinger, color = Swinger)) + geom_boxplot() + scale_x_discrete(limits = c("TRUE", "FALSE")) + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Legalizing Marijuana")
+
+ggplot(df, aes(y = ICE, x = Swinger, color = Swinger)) + geom_boxplot() + scale_x_discrete(limits = c("TRUE", "FALSE")) + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Defunding Immigration and Customs Enforcement")
+
+ggplot(df, aes(y = GUNS, x = Swinger, color = Swinger)) + geom_boxplot() + scale_x_discrete(limits = c("TRUE", "FALSE")) + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Gun Control")
+```
 
 #Section 3: What predicts being a swing voter?
 
