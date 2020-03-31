@@ -1,6 +1,6 @@
 ---
 title: "Mini Project 2"
-author: "Evelyn Delph"
+author: "Evelyn Delph, Arthur Janes"
 date: "3/26/2020"
 output: pdf_document
 ---
@@ -17,12 +17,19 @@ library(broom)
 # read in data
 df <- read.csv("DFP_WTHH_release.csv")
 
-# separate data in based on voting pattern
+# separate data into groups based on voting pattern
+loyalD <- filter(filter(df, presvote16post == 1), house3 == 1)
+loyalR <- filter(filter(df, presvote16post == 2), house3 == 2)
+
 switchD <- filter(filter(df,presvote16post != 1),house3 == 1)
 switchR <- filter(filter(df,presvote16post != 2),house3 == 2)
-swinger <- (df$presvote16post != 1 & df$house3 == 1) | (df$presvote16post != 2 & df$house3 == 2)
-swingers <-  df[swinger != FALSE,]
+
+swinger <- !((df$presvote16post == 1 & df$house3 == 1) | (df$presvote16post == 2 & df$house3 == 2))
+swingers <- df[swinger != FALSE,]
 df['Swinger'] <- swinger
+
+# subset data
+issues <- df[c("Swinger","M4A","GREENJOB","WEALTH","MARLEG","ICE","GUNS")]
 ```
 
 #Section 1: How do Switch D and Switch R voters differ on issue variables?
@@ -33,8 +40,6 @@ df['Swinger'] <- swinger
 
 ##Issue Variables
 ```{r,echo=F}
-# subset data
-issues <- df[c("Swinger","M4A","GREENJOB","WEALTH","MARLEG","ICE","GUNS")]
 
 # adding variables to model at a time
 one.issue <- glm(Swinger ~ WEALTH, family = quasibinomial, weights = weight_DFP, data = df)
