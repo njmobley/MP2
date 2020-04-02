@@ -128,8 +128,12 @@ ggplot(df, aes(y = GUNS, x = Party, color = Party)) + geom_boxplot() + coord_fli
 ```
 
 #Section 3: What predicts being a swing voter?
+There are two sets of variables that can determine swing voters from non-swing voters. First, the six issue variables will be examined, then the populism variables. After that, the best model among each variable group will be determined.
 
 ##Issue Variables
+First, to get a glimspe at the data, a pairs plot was constructed to see how individual variables were related. Wealth and Medicare for All had the highest correlation. As a result, it was a assumed there was an interaction between them. The rest of the variables had similar correlations, but not quite as high as the interaction terms. Due to this, it was anticipated that all of the variables were important for predicting swing voters. 
+
+For each model, the absolute difference between mean probabilities for swing voters and non swing voters were calculated. The model with the highest difference indicates a clearer separation between the two types of voters. THe model with the highest difference between the means is considered to be the best performing model as a result. Below shows the probability scores after adding each variable, as well as determining the most accurate model.
 ```{r,echo=F}
 
 # adding variables to model at a time
@@ -143,47 +147,71 @@ six.issues <- glm(Swinger ~ WEALTH * M4A + MARLEG + GUNS + GREENJOB + ICE, famil
 # probs for one issues
 coe <- coef(one.issue)
 y <- coe[1] + coe[2] * 1:5
-probs <- exp(y) / (1 + exp(y)) 
-cat("Probabilities for one issue variable (Wealth):\n",probs)
+probs1 <- exp(y) / (1 + exp(y)) 
+cat("Probabilities for one issue variable (Wealth):\n",probs1)
 print("")
 
 # probs for two issues
 coe <- coef(two.issues)
 y <- coe[1] + coe[2] + coe[3] * coe[4] * 1:5
-probs <- exp(y) / (1 + exp(y))
-cat("\nProbabilities for two issue variables (WEALTH + M4A):\n",probs)
+probs2 <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for two issue variables (WEALTH + M4A):\n",probs2)
 print("")
 
 coe <- coef(three.issues)
 y <- coe[1] + coe[2] + coe[3] + coe[4] * coe[5] * 1:5
-probs <- exp(y) / (1 + exp(y))
-cat("\nProbabilities for three issue variables (WEALTH + M4A + MARLEG):\n",probs)
+probs3 <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for three issue variables (WEALTH + M4A + MARLEG):\n",probs3)
 print("")
 
 coe <- coef(four.issues)
 y <- coe[1] + coe[2] + coe[3] + coe[4] + coe[5] * coe[6] * 1:5
-probs <- exp(y) / (1 + exp(y))
-cat("\nProbabilities for four issue variables (WEALTH + M4A + MARLEG + GUNS):\n",probs)
+probs4 <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for four issue variables (WEALTH + M4A + MARLEG + GUNS):\n",probs4)
 print("")
 
 coe <- coef(five.issues)
 y <- coe[1] + coe[2] + coe[3] + coe[4] + coe[5] + coe[6] * coe[7] * 1:5
-probs <- exp(y) / (1 + exp(y))
-cat("\nProbabilities for five issue variables (WEALTH + M4A + MARLEG + GUNS+ GREENJOB):\n",probs)
+probs5 <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for five issue variables (WEALTH + M4A + MARLEG + GUNS+ GREENJOB):\n",probs5)
 print("")
 
 coe <- coef(six.issues)
 y <- coe[1] + coe[2] + coe[3] + coe[4] + coe[5] + coe[6] + coe[7] * coe[8] * 1:5
-probs <- exp(y) / (1 + exp(y))
-cat("\nProbabilities for six issue variables (WEALTH + M4A + MARLEG + GUNS+GREENJOB + ICE):\n",probs)
+probs6 <- exp(y) / (1 + exp(y))
+cat("\nProbabilities for six issue variables (WEALTH + M4A + MARLEG + GUNS+GREENJOB + ICE):\n",probs6)
 ```
+```{r,echo=F}
+swingers <- c(probs1,probs2,probs3,probs4,probs5,probs6)
+best.model <- ""
+last.dif <- 0
+cat("\t\tNon-Swinger","Swinger","Difference","\n")
 
+for(i in 1:6){
+  not.swingers <- mean(1-swingers[i])
+  swingers.mean  <- mean(swingers[i])
+  dif <- abs(not.swingers-swingers.mean)
+  
+  if(dif > last.dif){
+    last.df <- dif
+    best.model <- i
+  }
+  
+  cat("# Variables",i,not.swingers, swingers.mean, dif,"\n")
+}
+
+cat("\nThe best model that shows the greatest difference 
+    between swing and non-swing votes the model with",i,"variables")
+```
 Final 6 variable equation:
 ```
 votes = -1.99244285 + 0.29325492 + 0.18323905 + (-0.18073493) + 0.11441703  + 0.16567127 + (-0.07662718) * (-0.10216151 ) * X
 ```
+For the issue variables, the model with all six variables seemed to have the highest separation with a difference of 0.6581869. This could show that all of the issues are important when determining a swing voter from a non-swing voter.
 
 ##Populism Variables
+The same steps were conducted for the populism variables. The only difference was that there wasn't a significant interaction term among the variables. Below shows the probabilities and the selection for the most accurate model.
+
 ```{r,echo=F}
 pop <- df[c("POP_1","POP_2","POP_3")]
 
@@ -195,28 +223,57 @@ three.pops <- glm(Swinger ~ POP_1 + POP_2 + POP_3, family = quasibinomial, weigh
 # probs for one pop variable
 coe <- coef(one.pop)
 y <- coe[1] + coe[2] * 1:5
-probs <- exp(y) / (1 + exp(y)) 
-cat("Probabilities for one populism variable (POP_1):\n",probs)
+p1 <- exp(y) / (1 + exp(y)) 
+cat("Probabilities for one populism variable (POP_1):\n",p1)
 print("")
 
 # probs for two pop variables
 coe <- coef(two.pops)
 y <- coe[1] + coe[2] + coe[3] * 1:5
-probs <- exp(y) / (1 + exp(y)) 
-cat("Probabilities for two populism variables (POP_1+ POP_2):\n",probs)
+p2 <- exp(y) / (1 + exp(y)) 
+cat("Probabilities for two populism variables (POP_1+ POP_2):\n",p2)
 print("")
 
 # probs for three pop variables
 coe <- coef(three.pops)
 y <- coe[1] + coe[2] + coe[3] + coe[4] * 1:5
-probs <- exp(y) / (1 + exp(y)) 
-cat("Probabilities for three populism variables (POP_1 + POP_2 + POP_3):\n",probs)
+p3 <- exp(y) / (1 + exp(y)) 
+cat("Probabilities for three populism variables (POP_1 + POP_2 + POP_3):\n",p3)
 print("")
+```
+```{r,echo=F}
+pops <- c(p1,p2,p3)
+best.model.pop <- ""
+last.dif.pop <- 0
+cat("\t\tNon-Swinger","Swinger","Difference","\n")
+
+for(i in 1:3){
+  not.pop <- mean(1-pops[i])
+  pop.mean  <- mean(pops[i])
+  dif <- abs(not.pop-pop.mean)
+  
+  if(dif > last.dif.pop){
+    last.df.pop <- dif
+    best.model.pop <- i
+  }
+  
+  
+  cat("# Variables",i,not.pop,pop.mean,dif,"\n")
+}
+
+cat("\nThe best model that shows the greatest difference 
+    between populism variables is the model with",i,"variables")
+
 ```
 Final 3 populism variable equation:
 ```
 votes = -1.06513692 + (-0.20446605) + (-0.04608700) + 0.06178131 * X
 ```
+For the populism variables, the model with the three variables had the highest separation with a difference of 0.5555029. Again, this could show that encompassing all variables gives a holistic picture of the swing and non-swing voters' values.
+
+##Best Model
+Among the best two models, the issue variables out perform it by roughly 18%. This could mean that issue variables are slightly better predictors than populism variables, as they point to concrete issues rather than abstract beliefs and ideals.
+
 #Appendix
 
 ##Section 3
