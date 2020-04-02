@@ -1,66 +1,119 @@
 ---
 title: "Mini Project 2"
-author: "Evelyn Delph, Arthur Janes"
+author: "Evelyn Delph, Arthur Janes, Nick Mobley"
 date: "3/26/2020"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 # library imports go here
 library(tidyverse)
-library(ggplot2)
-library(dplyr)
 library(GGally)
 library(broom)
+library(ggpubr)
 
 # read in data
-df <- read.csv("DFP_WTHH_release.csv")
+Source <- read.csv("DFP_WTHH_release.csv")
+df = Source
+colnames(df)[1] = "ID"
+#Removed worthless columns
+df = df %>%
+  select(c(ID,presvote16post,house3,weight_DFP,M4A,
+           GREENJOB,WEALTH,MARLEG,ICE,GUNS,
+           POP_1,POP_2,POP_3))
+
+df = df %>%
+  mutate(
+    Swinger = ifelse(presvote16post == house3 & 
+                       presvote16post %in% c(1,2),FALSE,TRUE),
+    Party = ifelse(presvote16post == house3 &
+                     presvote16post %in% c(1,2),
+                   ifelse(presvote16post == 1,"Democrat","Repulican"),
+                   "Swinger")
+  )
 
 # remove rows with NA conflicts
 df <- df[-c(2647, 3042, 3200),]
 
 # separate data into groups based on voting pattern
-loyalD <- filter(filter(df, presvote16post == 1), house3 == 1)
-loyalR <- filter(filter(df, presvote16post == 2), house3 == 2)
+loyalD = df %>%
+  filter(presvote16post == 1 & house3 == 1)
+loyalR = df %>%
+  filter(presvote16post == 2 & house3 == 2) 
 
 loyal <- rbind(loyalD, loyalR)
 
-switchD <- filter(filter(df,presvote16post != 1),house3 == 1)
-switchR <- filter(filter(df,presvote16post != 2),house3 == 2)
+switchD = df %>%
+  filter(presvote16post != 1 & house3 == 1) %>%
+  mutate(Partyto = "Democrat")
+switchR = df %>%
+  filter(presvote16post != 2 & house3 == 2) %>%
+  mutate(Partyto = "Republican")
 
-swinger <- !((df$presvote16post == 1 & df$house3 == 1) | (df$presvote16post == 2 & df$house3 == 2))
-swingers <- df[swinger != FALSE,]
-df['Swinger'] <- swinger
 
-# This takes a long time to run.. open to suggestions of better ways
-party <- array(0, dim=c(0, nrow(df)))
-i = 1
-while (TRUE) {
-  print(i)
-  if (df[i,]$presvote16post == 1 & df[i,]$house3 == 1) {
-    party[i] <- "Democrat"
-  } else if (df[i,]$presvote16post == 2 & df[i,]$house3 == 2){
-    party[i] = "Republican"
-  } else {
-    party[i] = "Swinger"
-  }
-  if (i == nrow(df)) {
-    break
-  }
-  i = i + 1
-}
-df['Party'] <- party
+switchers = rbind(switchD,switchR)
+
+
 
 # subset data
-issues <- df[c("Swinger","M4A","GREENJOB","WEALTH","MARLEG","ICE","GUNS")]
+issues = df %>%
+  select(c(Swinger,M4A,GREENJOB,WEALTH,MARLEG,ICE,GUNS))
 ```
 
 #Section 1: How do Switch D and Switch R voters differ on issue variables?
 
+```{r Plotting Function, include = F}
+IssueSwitchPlot <- function(dataframe,issue) {
+  ggplot(dataframe, aes(x = !!ensym(issue), 
+                        group = Partyto, 
+                        colour = Partyto,
+                        fill = Partyto)) +
+  geom_bar() + facet_wrap(~Partyto,nrow = 2) +
+    #ggtitle(paste("Differences on ",issue)) +
+    ylab("") + 
+    xlab("") +
+    scale_fill_manual(values = c("#0015BC","#E9141D")) +
+    scale_color_manual(values = c("#0015BC","#E9141D")) 
+}
+```
+
+```{r Setup Issue Plots,warning = FALSE,echo = FALSE,results= 'hide'}
+
+wantedIssues = c("M4A","GREENJOB",'WEALTH','MARLEG','ICE','GUNS')
+
+plot_list = lapply(wantedIssues, IssueSwitchPlot, dataframe = switchers)
+
+
+
+figLabels = c("Medicare for All","Green Jobs Program","Wealth Tax",
+              "Legalize Marijuana","Defunding ICE","Gun Control")
+
+
+plotGrid = ggarrange(plotlist = plot_list,
+          nrow = 3,
+          ncol = 2,
+          common.legend = TRUE,
+          legend = "bottom",
+          labels = figLabels)
+
+
+
+```
+
+
+```{r Plot Issues Plot,echo = FALSE, fig.width = 14, fig.height = 14,fig.align= 'center'}
+annotate_figure(plotGrid,
+                top = text_grob("How Swing Voters Feel on different Issues",
+                                size = 36))
+```
+
+
 #Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on issue variables?
 
 ```{r, warning = FALSE}
+
+
 ggplot(df, aes(y = M4A, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Medicare For ALL")
 
 ggplot(df, aes(y = GREENJOB, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("A Green Jobs Program")
@@ -289,3 +342,6 @@ gg2
 gg3
 gg4
 ```
+
+
+
