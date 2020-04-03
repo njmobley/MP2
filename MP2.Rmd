@@ -17,6 +17,7 @@ library(ggpubr)
 Source <- read.csv("DFP_WTHH_release.csv")
 df = Source
 colnames(df)[1] = "ID"
+
 #Removed worthless columns
 df = df %>%
   select(c(ID,presvote16post,house3,weight_DFP,M4A,
@@ -100,9 +101,6 @@ plotGrid = ggarrange(plotlist = plot_list,
           common.legend = TRUE,
           legend = "bottom",
           labels = figLabels)
-
-
-
 ```
 
 The graph below shows survey results of 'swing voters' on different 
@@ -165,11 +163,9 @@ annotate_figure(plotGrid,
 ```
 
 
-#Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on issue variables?
+#Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on the issue variables?
 
 ```{r, warning = FALSE}
-
-
 ggplot(df, aes(y = M4A, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Medicare For ALL")
 
 ggplot(df, aes(y = GREENJOB, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("A Green Jobs Program")
@@ -182,6 +178,10 @@ ggplot(df, aes(y = ICE, x = Party, color = Party)) + geom_boxplot() + coord_flip
 
 ggplot(df, aes(y = GUNS, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Gun Control")
 ```
+
+As was expected, it seems that swing voters represent a moderate group of voters when compared to both Democrats and Republicans. 
+ - For each issue, the mean of the swing votes lies in between that of the Democrats and the Republicans. The difference between the mean swing vote and each party's mean vote is approximately equal for each issue. This indicates that swing voters tend to the middle of the distribution, largely separating the Democrats and Republicans.
+ - However, the overall distribution of the swing votes lies much closer to that of the Democrat votes for a tax on wealth over $100 million and legalizing marijuana. Therefore, it seems that swing voters think more like Democrats on these two issues. 
 
 #Section 3: What predicts being a swing voter?
 There are two sets of variables that can determine swing voters from non-swing voters. First, the six issue variables will be examined, then the populism variables. After that, the best model among each variable group will be determined.
