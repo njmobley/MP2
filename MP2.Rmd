@@ -61,7 +61,7 @@ issues = df %>%
   select(c(Swinger,M4A,GREENJOB,WEALTH,MARLEG,ICE,GUNS))
 ```
 
-#Section 1: How do Switch D and Switch R voters differ on issue variables?
+# How do Switch D and Switch R voters differ on issue variables?
 
 ```{r Plotting Function, include = F}
 IssueSwitchPlot <- function(dataframe,issue) {
@@ -69,18 +69,22 @@ IssueSwitchPlot <- function(dataframe,issue) {
                         group = Partyto, 
                         colour = Partyto,
                         fill = Partyto)) +
-  geom_bar() + facet_wrap(~Partyto,nrow = 2) +
-    #ggtitle(paste("Differences on ",issue)) +
+  geom_bar() + 
+    facet_wrap(~Partyto,nrow = 2,scales = "free_y") +
     ylab("") + 
     xlab("") +
-    scale_fill_manual(values = c("#0015BC","#E9141D")) +
-    scale_color_manual(values = c("#0015BC","#E9141D")) 
+    scale_fill_manual(name = "Party Switched To",
+                      values = c("#0015BC","#E9141D")) +
+    scale_color_manual(name = "Party Switched To",
+                       values = c("#0015BC","#E9141D"))  
 }
 ```
 
 ```{r Setup Issue Plots,warning = FALSE,echo = FALSE,results= 'hide'}
 
 wantedIssues = c("M4A","GREENJOB",'WEALTH','MARLEG','ICE','GUNS')
+
+
 
 plot_list = lapply(wantedIssues, IssueSwitchPlot, dataframe = switchers)
 
@@ -102,10 +106,16 @@ plotGrid = ggarrange(plotlist = plot_list,
 ```
 
 
+
+
+
+
+
 ```{r Plot Issues Plot,echo = FALSE, fig.width = 14, fig.height = 14,fig.align= 'center'}
 annotate_figure(plotGrid,
                 top = text_grob("How Swing Voters Feel on different Issues",
-                                size = 36))
+                                size = 36),
+                bottom = text_grob("Survey Results on Scale 1-5, 1 = Strongly Support, 5 = Strongly Oppose (6 = \"Not Sure\")",size = 24))
 ```
 
 
