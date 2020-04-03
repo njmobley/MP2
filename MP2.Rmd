@@ -105,7 +105,53 @@ plotGrid = ggarrange(plotlist = plot_list,
 
 ```
 
+The graph below shows survey results of 'swing voters' on different 
+political issues. Amongst the different issues there are similarities
+and differences between the two groups:
 
+   - Medicare for All has an almost mirror distribution between the 
+   two different groups. Democrats mostly support it while Republicans
+   generally strongly oppose it. 
+   
+   - Green Jobs Program is less clear. It is pretty obvious that most
+   Democrats strongly agree with the program. However for the Republicans
+   it isn't as clear. The most common response was 2 meaning they
+   agree, but the second most common response was strongly oppose. So
+   overall most swing voters will generally agree with democrat swing
+   voters on the green jobs program, but there is still a decent portion
+   that will strongly disagree.
+   
+   - Wealth Tax for the democratic party is nearly unamious in favor for 
+   it. An overwhelming number agree with it, however the sentiment is 
+   ambigious within the Republican swingers. The results almost look
+   uniform, except they respondants were more likely to give a 'strong'
+   opinion.
+   
+   - Leagalize Marijuana has an almost idnetical distribution between
+   the two groups. Although it seems the Republican swing voters have 
+   a little bit more opposition within the party than the Democrats do, 
+   a majority of both groups will agree on the legalization.
+   
+   - Defunding ICE seems to be a split topic within Democrat voters. It
+   seems that they mostly have a uniform distirbution, except similar to 
+   wealth tax for republican are more likely to give a 'strong' opinion.
+   For the Republicans it seems obvious that generally they are in 
+   consensus to defunding ICE.
+   
+   - Gun control for the Democrats is in strong favor to put more limits
+   on gun control. While for the first time it seems the republican party
+   doesn't really have a strong opinon. The most common response was 
+   neutral, but the most common after that were 2 and 1 which shows that
+   most people either don't have a strong opinion, or they are in favor 
+   for increasing gun control.
+   
+To highlight some key differences here. It seems Democrats have the 
+strongest opinions on Wealth Tax and LEgalize Marijuana, while the 
+republican party is much more split on these issues. On the otherhand
+republican party has a strong opinion on Medicare for All and Defunding
+Ice. Because of these strong polarities, these issues would be the most 
+useful in determining which group a swing voter would be a part of. 
+   
 
 
 
