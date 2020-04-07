@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE,warning = FALSE)
 # library imports go here
 library(tidyverse)
 library(GGally)
@@ -164,7 +164,7 @@ annotate_figure(plotGrid,
 ```
 
 
-#Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on the issue variables?
+# Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on the issue variables?
 
 ```{r, warning = FALSE}
 ggplot(df, aes(y = M4A, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Medicare For ALL")
@@ -186,14 +186,15 @@ As was expected, it seems that swing voters represent a moderate group of voters
  
  - However, the overall distribution of the swing votes lies much closer to that of the Democrat votes for a tax on wealth over $100 million and legalizing marijuana. Therefore, it seems that swing voters think more like Democrats on these two issues. 
 
-#Section 3: What predicts being a swing voter?
+# Section 3: What predicts being a swing voter?
 There are two sets of variables that can determine swing voters from non-swing voters. First, the six issue variables will be examined, then the populism variables. After that, the best model among each variable group will be determined.
 
-##Issue Variables
+## Issue Variables
 First, to get a glimspe at the data, a pairs plot was constructed to see how individual variables were related. Wealth and Medicare for All had the highest correlation. As a result, it was a assumed there was an interaction between them. The rest of the variables had similar correlations, but not quite as high as the interaction terms. Due to this, it was anticipated that all of the variables were important for predicting swing voters. 
 
 For each model, the absolute difference between mean probabilities for swing voters and non swing voters were calculated. The model with the highest difference indicates a clearer separation between the two types of voters. THe model with the highest difference between the means is considered to be the best performing model as a result. Below shows the probability scores after adding each variable, as well as determining the most accurate model.
-```{r,echo=F}
+
+```{r}
 
 # adding variables to model at a time
 one.issue <- glm(Swinger ~ WEALTH, family = quasibinomial, weights = weight_DFP, data = df)
@@ -268,7 +269,7 @@ votes = -1.99244285 + 0.29325492 + 0.18323905 + (-0.18073493) + 0.11441703  + 0.
 ```
 For the issue variables, the model with all six variables seemed to have the highest separation with a difference of 0.6581869. This could show that all of the issues are important when determining a swing voter from a non-swing voter.
 
-##Populism Variables
+## Populism Variables
 The same steps were conducted for the populism variables. The only difference was that there wasn't a significant interaction term among the variables. Below shows the probabilities and the selection for the most accurate model.
 
 ```{r,echo=F}
@@ -330,20 +331,20 @@ votes = -1.06513692 + (-0.20446605) + (-0.04608700) + 0.06178131 * X
 ```
 For the populism variables, the model with the three variables had the highest separation with a difference of 0.5555029. Again, this could show that encompassing all variables gives a holistic picture of the swing and non-swing voters' values.
 
-##Best Model
+## Best Model
 Among the best two models, the issue variables out perform it by roughly 18%. This could mean that issue variables are slightly better predictors than populism variables, as they point to concrete issues rather than abstract beliefs and ideals.
 
-#Appendix
+# Appendix
 
-##Section 3
+## Section 3
 
 GGPairs plot to detect correlation and possible interactions with issue variables:
-```{r,echo=F}
+```{r, warning = FALSE}
 ggpairs(issues)
 ```
 
 Results of fitting the issue variable models:
-```{r,echo=F}
+```{r,echo=F, fig.align='center'}
 # evaluate residuals
 six.df <- augment(six.issues)
 
@@ -411,12 +412,12 @@ gg7
 ```
 
 GGPairs for populism variables:
-```{r,echo=F}
+```{r,fig.align='center'}
 ggpairs(pop)
 ```
 
 Results from fitting populism variables:
-```{r,echo=F}
+```{r,fig.align = 'center'}
 # evaluate residuals
 pop.df <- augment(three.pops)
 
