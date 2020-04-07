@@ -159,7 +159,8 @@ useful in determining which group a swing voter would be a part of.
 annotate_figure(plotGrid,
                 top = text_grob("How Swing Voters Feel on different Issues",
                                 size = 36),
-                bottom = text_grob("Survey Results on Scale 1-5, 1 = Strongly Support, 5 = Strongly Oppose (6 = \"Not Sure\")",size = 24))
+                bottom = text_grob("Survey Results on Scale 1-5, 1 = Strongly Support, 5 = Strongly Oppose (6 = \"Not Sure\")",size = 24),
+                left = text_grob("Count",size = 30,rot = 90))
 ```
 
 
