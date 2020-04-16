@@ -1,0 +1,251 @@
+---
+title: "Mini Project 2"
+author: "Evelyn Delph"
+date: "3/26/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# library imports go here
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(GGally)
+library(tidyverse)
+library(ggpubr)
+library(cowplot)
+
+# read in data
+df <- read.csv("DFP_WTHH_release.csv")
+
+# separate data in based on voting pattern
+switchD <- filter(filter(df,presvote16post != 1),house3 == 1)
+switchR <- filter(filter(df,presvote16post != 2),house3 == 2)
+swinger <- (df$presvote16post != 1 & df$house3 == 1) | (df$presvote16post != 2 & df$house3 == 2)
+swingers <-  df[swinger != FALSE,]
+df['Swinger'] <- swinger
+```
+
+# Section 3: What predicts being a swing voter?
+Issue and populism variables could predict whether or not a person is a swing voter. Two models composed of issue variables and populism variables were constructed to determine the best predictors. For both models, glm models were used for both sets of variables using a quasibinomial distribution with the survey weights. 
+
+## Part 1: Issue Variables
+The best model included all variables, with an interaction between wealth and medicare for all, as they had almost a 60% correlation. Below shows the distribution of swing voters (denoted as true), non-swing voters (false), and unidentified voters (n/a). The next graphic shows average probability for voters per number of issue variables. This shows the difference between the separation between voter groups over issue variables. The third graphic plots the difference between only swing and non-swing voters, as n/a's followed a less consistent pattern. The best model was determined by the number of issue variables having the highest separation between swing and non-swing voters. Distributions of the remaining five models can be found in the appendix.
+```{r,echo=F,warning=F}
+# subset data
+issues <- df[c("Swinger","M4A","GREENJOB","WEALTH","MARLEG","ICE","GUNS")]
+
+# models
+one.issue <- glm(Swinger ~ WEALTH, family = quasibinomial, weights = weight_DFP, data = df)
+two.issues <- glm(Swinger ~ WEALTH * M4A, family = quasibinomial, weights = weight_DFP, data = df)
+three.issues <- glm(Swinger ~ WEALTH * M4A + MARLEG, family = quasibinomial, weights = weight_DFP, data = df)
+four.issues <-  glm(Swinger ~ WEALTH * M4A + MARLEG + GUNS, family = quasibinomial, weights = weight_DFP, data = df)
+five.issues <-  glm(Swinger ~ WEALTH * M4A + MARLEG + GUNS + GREENJOB, family = quasibinomial, weights = weight_DFP, data = df)
+six.issues <- glm(Swinger ~ WEALTH * M4A + MARLEG + GUNS + GREENJOB + ICE, family = quasibinomial, weights = weight_DFP, data = df)
+
+one.issue.preds <- predict(one.issue, type = "response", newdata = df) 
+issues$one.preds <- as.vector(one.issue.preds)
+
+two.issue.preds <- predict(two.issues, type = "response", newdata = df) 
+issues$two.preds <- as.vector(two.issue.preds)
+
+three.issue.preds <- predict(three.issues, type = "response", newdata = df) 
+issues$three.preds <- as.vector(three.issue.preds)
+
+four.issue.preds <- predict(four.issues, type = "response", newdata = df) 
+issues$four.preds <- as.vector(four.issue.preds)
+
+five.issue.preds <- predict(five.issues, type = "response", newdata = df) 
+issues$five.preds <- as.vector(five.issue.preds)
+
+six.issue.preds <- predict(six.issues, type = "response", newdata = df) 
+issues$six.preds <- as.vector(six.issue.preds)
+```
+
+```{r,echo=F,warning=F}
+issues.agg <- issues %>%
+  select(c(Swinger,one.preds,two.preds,three.preds,four.preds,five.preds,six.preds)) %>%
+  pivot_longer(c(one.preds,two.preds,three.preds,four.preds,five.preds,six.preds)) %>%
+  filter(!is.na(value)) %>%
+  group_by(Swinger,name) %>%
+  summarise(value=mean(value)) %>%
+  transmute(
+    prob = value,
+    num.vars= recode_factor(name,'one.preds'=1,'two.preds'=2,'three.preds'=3,'four.preds'=4,'five.preds'=5,'six.preds'=6)
+    )
+
+issues.spread <- issues.agg %>%
+  spread(num.vars,prob)
+
+one <- abs(issues.spread$`1`[1] - issues.spread$`1`[2])
+two <- abs(issues.spread$`2`[1] - issues.spread$`2`[2])
+three <- abs(issues.spread$`3`[1] - issues.spread$`3`[2])
+four <- abs(issues.spread$`4`[1] - issues.spread$`4`[2])
+five <- abs(issues.spread$`5`[1] - issues.spread$`5`[2])
+six <- abs(issues.spread$`6`[1] - issues.spread$`6`[2])
+
+newRow <- c("DIF",one,two,three,four,five,six)
+issues.spread[nrow(issues.spread) + 1,] = newRow
+issues.spread <- data.frame(t(issues.spread)) %>% slice(2:n())
+issues.spread$issue <- 1:6
+issues.spread$X4 <- round(as.numeric(levels(issues.spread$X4)[issues.spread$X4]),3)
+```
+
+```{r,echo=F,fig.show = "hold",fig.align="center",warning=F,out.width = "75%"}
+gg1 <- ggplot(issues,aes(x=six.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters Over Six Issue Variables")
+gg1
+```
+
+```{r,echo=F,fig.show = "hold",out.width = "50%",warning=F,out.width = "50%"}
+gg2 <- ggplot(issues.agg,aes(x=as.numeric(num.vars),y=prob,color=Swinger)) + 
+  geom_point(size=2) + 
+  geom_line() + 
+  xlab("Number of Issue Variables") +
+  ylab("Probability") + 
+  ggtitle("Probability of Swing Voter over Issue Variables")
+
+gg3 <- ggplot(issues.spread,aes(x=issue,y=X4,color=issue)) + 
+  geom_point(size=2) + 
+  geom_line() +
+  xlab("Number of Issue Variables") +
+  ylab("Probability") + 
+  ggtitle("Average Difference Between Swing/NonSwing Voters") +
+  theme(legend.position = "None")
+gg2
+gg3
+```
+
+## Populism Variables
+The best model included all variables. No interaction terms were included due to low correlations across all three. The first graphic shows the distribution of the three variable model. The next graphic shows the average probability for voters per number of populism variables. The third graphic shows the difference between only swing and non-swingers over populism variables. Again, the n/a's did not demonstrate a consisten pattern like swing and non-swing voters. The best model was determined by the number of populism variables having the highest separation between the voter groups.
+```{r,echo=F,warning=F}
+# subset data
+issues.pop <- df[c("Swinger","POP_1","POP_2","POP_3")]
+
+# models
+one.issue <- glm(Swinger ~ POP_1, family = quasibinomial, weights = weight_DFP, data = df)
+two.issues <- glm(Swinger ~ POP_1 + POP_2, family = quasibinomial, weights = weight_DFP, data = df)
+three.issues <- glm(Swinger ~ POP_1 + POP_2 + POP_3, family = quasibinomial, weights = weight_DFP, data = df)
+
+one.issue.preds <- predict(one.issue, type = "response", newdata = df) 
+issues.pop$one.preds <- as.vector(one.issue.preds)
+
+two.issue.preds <- predict(two.issues, type = "response", newdata = df) 
+issues.pop$two.preds <- as.vector(two.issue.preds)
+
+three.issue.preds <- predict(three.issues, type = "response", newdata = df) 
+issues.pop$three.preds <- as.vector(three.issue.preds)
+
+issues.agg2 <- issues.pop %>%
+  select(c(Swinger,one.preds,two.preds,three.preds)) %>%
+  pivot_longer(c(one.preds,two.preds,three.preds)) %>%
+  filter(!is.na(value)) %>%
+  group_by(Swinger,name) %>%
+  summarise(value=mean(value)) %>%
+  transmute(
+    prob = value,
+    num.vars= recode_factor(name,'one.preds'=1,'two.preds'=2,'three.preds'=3)
+    )
+
+issues.spread <- issues.agg2 %>%
+  spread(num.vars,prob)
+
+one <- abs(issues.spread$`1`[1] - issues.spread$`1`[2])
+two <- abs(issues.spread$`2`[1] - issues.spread$`2`[2])
+three <- abs(issues.spread$`3`[1] - issues.spread$`3`[2])
+newRow <- c("DIF",one,two,three)
+issues.spread[nrow(issues.spread) + 1,] = newRow
+issues.spread <- data.frame(t(issues.spread)) %>% slice(2:n())
+issues.spread$issue <- 1:3
+issues.spread$X4 <- round(as.numeric(levels(issues.spread$X4)[issues.spread$X4]),3)
+```
+
+```{r,echo=F,fig.show = "hold", out.width = "50%",fig.align="center",warning=F}
+gg1 <- ggplot(issues,aes(x=three.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters Over 3 Populism Variables")
+gg1
+```
+
+```{r,echo=F,fig.show = "hold",out.width = "50%",warning=F}
+gg2 <- ggplot(issues.agg,aes(x=as.numeric(num.vars),y=prob,color=Swinger)) + 
+  geom_point(size=2) + 
+  geom_line() + 
+  xlab("Number of Issue Variables") +
+  ylab("Probability") + 
+  ggtitle("Probability of Swing Voter over Populism Variables")
+
+gg3 <- ggplot(issues.spread,aes(x=issue,y=X4,color=issue)) + 
+  geom_point(size=2) + 
+  geom_line() + 
+  xlab("Number of Populism Variables") +
+  ylab("Probability") + 
+  ggtitle("Average Difference Between Swing/NonSwing Voters") +
+  theme(legend.position = "None")
+gg2
+gg3
+```
+## Conclusion
+
+Overall, the model was able to make somewhat useful predictions. There's a lot of overlap in performance among the models. The next step would probably be to experiment with more nonlinear models to increase the separation and distinction between the voter groups. With these results, the best model appears to be the six issue variable model because it has a higher separation between voter groups. The difference between swing and non-swing voters on six issue variables is 0.027 and the difference for populism variables is 0.014. This may make more sense because the issue variables represent concrete policies, whereas populism variables lean more towards abstract.
+
+# Appendix
+
+## Section 3
+
+### Issue Variables
+```{r,echo=F,warning=F,fig.show = "hold",out.width = "30%"}
+ggplot(issues,aes(x=one.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters over Wealth")
+
+ggplot(issues,aes(x=two.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters over 2 Issue Variables")
+
+
+ggplot(issues,aes(x=three.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters over 3 Issue Variables")
+```
+
+```{r,echo=F,warning=F,fig.show = "hold",out.width = "50%"}
+ggplot(issues,aes(x=three.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters over 4 Issue Variables")
+
+ggplot(issues,aes(x=five.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters over 5 Issue Variables")
+```
+
+### Populism Variables
+```{r,echo=F,warning=F,fig.show = "hold",out.width = "50%"}
+ggplot(issues,aes(x=one.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters over POP_1")
+
+ggplot(issues,aes(x=two.preds,fill=Swinger)) + 
+  stat_density(alpha=.9) +
+  facet_wrap(~Swinger,ncol=1) + 
+  theme(legend.position = "none") +
+  ggtitle("Distribution of Swing Voters over 2 POP Variables")
+```
