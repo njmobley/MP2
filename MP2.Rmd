@@ -209,7 +209,7 @@ plotGrid = ggarrange(plotlist = list(p1,p2,p3,p4,p5,p6),
 ```{r, fig.align='center',fig.width=10,fig.height=12}
 annotate_figure(plotGrid,
                 top = text_grob("WHATEVER TITLE THOMAS WANTS",
-                                hjust = .7,vjust = -.1),
+                                hjust = .7,face = 'bold'),
                 left = text_grob("Party", size = 36,rot = 90))
 ```
 
