@@ -12,6 +12,7 @@ library(tidyverse)
 library(GGally)
 library(broom)
 library(ggpubr)
+library(grid)
 
 # read in data
 Source <- read.csv("DFP_WTHH_release.csv")
@@ -167,17 +168,49 @@ annotate_figure(plotGrid,
 # Section 2: How do Swing voters differ from loyal Republicans and loyal Democrats on the issue variables?
 
 ```{r, warning = FALSE}
-ggplot(df, aes(y = M4A, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Medicare For ALL")
+p1 = ggplot(df, aes(y = M4A, x = Party, color = Party)) + geom_boxplot() + 
+  coord_flip() + 
+  stat_summary(fun.y = mean, geom = "point", size = 4) + ylab("") + xlab("")
 
-ggplot(df, aes(y = GREENJOB, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("A Green Jobs Program")
+p2 = ggplot(df, aes(y = GREENJOB, x = Party, color = Party)) + geom_boxplot() +
+  coord_flip() + 
+  stat_summary(fun.y = mean, geom = "point", size = 4)+ ylab("")+ xlab("")
 
-ggplot(df, aes(y = WEALTH, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("A tax on wealth over $100 million")
+p3 = ggplot(df, aes(y = WEALTH, x = Party, color = Party)) + geom_boxplot() + 
+  coord_flip() + 
+  stat_summary(fun.y = mean, geom = "point", size = 4) + ylab("")+ xlab("")
 
-ggplot(df, aes(y = MARLEG, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Legalizing Marijuana")
+p4 = ggplot(df, aes(y = MARLEG, x = Party, color = Party)) + geom_boxplot() + 
+  coord_flip() + 
+  stat_summary(fun.y = mean, geom = "point", size = 4) + ylab("")+ xlab("")
 
-ggplot(df, aes(y = ICE, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Defunding Immigration and Customs Enforcement")
+p5 = ggplot(df, aes(y = ICE, x = Party, color = Party)) + geom_boxplot() +
+  coord_flip() + 
+  stat_summary(fun.y = mean, geom = "point", size = 4) + ylab("")+ xlab("")
 
-ggplot(df, aes(y = GUNS, x = Party, color = Party)) + geom_boxplot() + coord_flip() + stat_summary(fun.y = mean, geom = "point", size = 4) + ggtitle("Gun Control")
+p6 = ggplot(df, aes(y = GUNS, x = Party, color = Party)) + geom_boxplot() +
+  coord_flip() +
+  stat_summary(fun.y = mean, geom = "point", size = 4) + ylab("")+ xlab("")
+
+```
+
+```{r}
+plotGrid = ggarrange(plotlist = list(p1,p2,p3,p4,p5,p6),
+          nrow = 3,
+          ncol = 2,
+          common.legend = TRUE,
+          legend = "bottom",
+          labels = figLabels,
+          vjust = -.2)
+```
+
+
+
+```{r, fig.align='center',fig.width=10,fig.height=12}
+annotate_figure(plotGrid,
+                top = text_grob("WHATEVER TITLE THOMAS WANTS",
+                                hjust = .7,vjust = -.1),
+                left = text_grob("Party", size = 36,rot = 90))
 ```
 
 As was expected, it seems that swing voters represent a moderate group of voters when compared to both Democrats and Republicans. 
